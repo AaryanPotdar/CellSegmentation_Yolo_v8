@@ -5,4 +5,5 @@ gdown
 flask-cors
 flask
 ultralytics
+
 -e .
