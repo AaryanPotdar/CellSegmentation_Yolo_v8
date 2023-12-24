@@ -1,9 +1,7 @@
-from dataclasses import dataclass
 import os
 import sys
 import zipfile
 import gdown
-
 from cellSegmentation.logger import logging
 from cellSegmentation.exception import AppException
 from cellSegmentation.entity.config_entity import DataIngestionConfig
