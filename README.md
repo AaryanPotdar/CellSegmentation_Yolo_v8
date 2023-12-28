@@ -3,6 +3,8 @@
 ## Overview
 This project aims to implement cell segmentation using the YOLOv8 model. It's designed as a web-based application where users can train and use a model for the purpose of segmenting cells in images. The project uses Flask for the backend, integrates with YOLOv8 for image processing, and offers a user-friendly web interface.
 
+![image.info](CellSegmentation_Yolo_v8/pic/model_img.png)
+
 ## Features
 - **Data Ingestion:** Automated process to ingest and prepare data for training.
 - **Data Validation:** Ensures the quality and integrity of the data before training.
