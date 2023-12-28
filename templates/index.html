@@ -1,153 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Cell Segmentation Model
-  </title>
-  <link crossorigin="anonymous" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" rel="stylesheet"/>
-  <style>
-   body {
-        font-family: Arial, sans-serif;
-        background-color: #f8f9fa;
-        color: #333;
-        padding: 20px;
-    }
-    header, footer {
-        background-color: #007bff;
-        color: white;
-        padding: 10px;
-        text-align: center;
-    }
-    .container {
-        max-width: 800px;
-        margin: auto;
-        background-color: white;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-  </style>
- </head>
- <body>
-  <header>
-   <h1>
-    Cell Segmentation using YOLOv8
-   </h1>
-  </header>
-  <div class="container">
-   <div class="model-info">
-    <h3>
-     About the Model
-    </h3>
-    <p>
-     This cell segmentation model is powered by advanced machine learning algorithms, designed to identify and segment red and white blood cells in microscopic images. Upload your cell image, and the model will analyze it to provide segmented results, enhancing the capabilities of medical analysis and research.
-    </p>
-   </div>
-   <form class="upload-data">
-    <input class="btn btn-primary" id="uload" type="button" value="Upload"/>
-    <input class="btn btn-success" id="send" type="button" value="Predict"/>
-    <input id="url" type="hidden" value="../predict"/>
-    <input id="fileinput" style="display: none;" type="file"/>
-   </form>
-   <div class="row">
-    <div class="col-md-6">
-     <div class="card image-container">
-      <img id="photo" src="" style="display: none;"/>
-     </div>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cell Segmentation Model</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+        }
+        header, footer {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+        .resp-img {
+            max-width: 100%;
+            max-height: 100%; /* Add a max-height */
+            height: auto;
+            display: block;
+            object-fit: contain; /* This ensures the image is scaled properly within the container */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cell Segmentation using YOLOv8</h1>
+    </header>
+    <div class="container">
+        <div class="model-info">
+            <h3>About the Model</h3>
+            <p>This cell segmentation model is powered by advanced machine learning algorithms, designed to identify and segment red and white blood cells in microscopic images. Upload your cell image, and the model will analyze it to provide segmented results, enhancing the capabilities of medical analysis and research.</p>
+        </div>
+        <form class="upload-data">
+            <input type="button" class="btn btn-primary" id="uload" value="Upload"/>
+            <input type="button" class="btn btn-success" id="send" value="Predict"/>
+            <input type="hidden" id="url" value="../predict"/>
+            <input type="file" id="fileinput" style="display: none;"/>
+        </form>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card image-container">
+                    <div CLASS="cared-body">
+                    <img id="photo" src="" alt="Uploaded Cell Image" class="resp-img" style="display: none;"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="results-container">Predicted result</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-md-6">
-     <div class="card">
-      <div class="card-body">
-       <h5 class="card-title">
-        Prediction Results
-       </h5>
-       <div id="results-container">
-       </div>
-      </div>
-     </div>
+    <div id="loading" style="display: none;">
+        <div class="loader"></div>
     </div>
-   </div>
-  </div>
-  <div id="loading" style="display: none;">
-   <div class="loader">
-   </div>
-  </div>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js">
-  </script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js">
-  </script>
-  <script>
-   var myvideo = document.getElementById('video');
-		var myphoto = document.getElementById('photo');
-		var base_data = "";
 
-		function sendRequest(base64Data) {
-			var type = "json";
-			if (base64Data) {
-				var url = $("#url").val();
-				$("#loading").show();
-				$.ajax({
-					url: url,
-					type: "post",
-					cache: false,
-					async: true,
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					data: JSON.stringify({
-						image: base64Data
-					}),
-					success: function (res) {
-						var imageData = res.image;
-						$("#results-container").html("<img class='resp-img' src='data:image/jpeg;base64," +
-							imageData + "' alt='' />");
-						$("#loading").hide();
-					}
-				});
-			}
-		}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="path-to-your-script.js"></script> 
 
-		$(document).ready(function () {
-			$("#loading").hide();
+    <script>
+            var myvideo = document.getElementById('video');
+            var myphoto = document.getElementById('photo');
+            var base_data = "";
 
-			$('#send').click(function (evt) {
-				sendRequest(base_data);
-			});
+            function sendRequest(base64Data) {
+                var type = "json";
+                if (base64Data) {
+                    var url = $("#url").val();
+                    $("#loading").show();
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        cache: false,
+                        async: true,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        data: JSON.stringify({
+                            image: base64Data
+                        }),
+                        success: function (res) {
+                            var imageData = res.image;
+                            $("#results-container").html("<img class='resp-img' src='data:image/jpeg;base64," +
+                                imageData + "' alt='' />");
+                            $("#loading").hide();
+                        }
+                    });
+                }
+            }
 
-			$('#uload').click(function (evt) {
-				$('#fileinput').focus().trigger('click');
-			});
-			$("#fileinput").change(function () {
-				if (this.files && this.files[0]) {
-					var reader = new FileReader();
-					reader.onload = function (e) {
-						var url = e.target.result;
-						var img = new Image();
-						img.crossOrigin = 'Anonymous';
-						img.onload = function () {
-							var canvas = document.createElement('CANVAS');
-							var ctx = canvas.getContext('2d');
-							canvas.height = this.height;
-							canvas.width = this.width;
-							ctx.drawImage(this, 0, 0);
-							base_data = canvas.toDataURL('image/jpeg', 1.0).replace(
-								/^data:image.+;base64,/, '');
-							canvas = null;
-						};
-						img.src = url;
-						$('#photo').attr('src', url);
-						$('#photo').show();
-						$('#video').hide();
-					}
-					reader.readAsDataURL(this.files[0]);
-				}
-			});
-		});
-  </script>
- </body>
+            $(document).ready(function () {
+                $("#loading").hide();
+
+                $('#send').click(function (evt) {
+                    sendRequest(base_data);
+                });
+
+                $('#uload').click(function (evt) {
+                    $('#fileinput').focus().trigger('click');
+                });
+                $("#fileinput").change(function () {
+                    if (this.files && this.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var url = e.target.result;
+                            var img = new Image();
+                            img.crossOrigin = 'Anonymous';
+                            img.onload = function () {
+                                var canvas = document.createElement('CANVAS');
+                                var ctx = canvas.getContext('2d');
+                                canvas.height = this.naturalHeight;
+                                canvas.width = this.naturalWidth;
+                                ctx.drawImage(this, 0, 0);
+                                base_data = canvas.toDataURL('image/jpeg', 1.0).replace(
+                                    /^data:image.+;base64,/, '');
+                                canvas = null;
+                            };
+                            img.src = url;
+                            $('#photo').attr('src', url);
+                            $('#photo').show();
+                            $('#video').hide();
+                        }
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            });
+    </script>
+</body>
 </html>
