@@ -1,24 +1,3 @@
-##### PIPELINE TESTING CODE #####
-
-# from cellSegmentation.logger import logging
-# from cellSegmentation.exception import AppException
-# import sys, os
-
-# from cellSegmentation.pipeline.training_pipeline import TrainPipeline
-
-# # logging.info("log should show levelname")
-
-# # try:
-# #     a = 1/0
-# # except Exception as e:
-# #     logging.info("Divide by zero error")
-# #     raise AppException(e, sys)
-
-# obj = TrainPipeline()
-# obj.run_pipeline()
-# print("Training done")
-
-
 import sys, os
 from cellSegmentation.pipeline.training_pipeline import TrainPipeline
 from cellSegmentation.utils.main_utils import decode_image, encode_image_base_64
@@ -37,34 +16,36 @@ class ClientApp:
 def trainRoute():
     obj = TrainPipeline()
     obj.run_pipeline()
-    return "Training Successfull"
+    return "Training Successful"
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/predict", methods=['POST','GET'])
+@app.route("/predict", methods=['POST'])
 @cross_origin()
 def predictRoute():
     try:
         image = request.json['image']
         decode_image(image, clApp.filename)
 
-        # user data will be stored inside data folder
-        os.system("yolo task=segment mode=predict model=artifacts/model_trainer/best.pt conf=0.25 source=data/inputImage.jpg save=true")
+        # Consider replacing os.system with subprocess.run for better security
+        os.system("yolo task=segment mode=predict model=artifacts/model_trainer/best.pt conf=0.25 source=data/inputImage.jpg save=true project=/Users/aaryanpotdar/CellSegmentation/CellSegmentation_Yolo_v8/runs/segment")
 
-        opencodedbase64 = encode_image_base_64("runs/segment/predict/inputImage.jpg")
+        opencodedbase64 = encode_image_base_64("/Users/aaryanpotdar/CellSegmentation/CellSegmentation_Yolo_v8/runs/segment/predict/inputImage.jpg")
         result = {"image": opencodedbase64.decode('utf-8')}
-        os.system("rm -rf runs")
+
+        # Consider error handling for file operations
+        os.system("rm -r /Users/aaryanpotdar/CellSegmentation/CellSegmentation_Yolo_v8/runs")
 
     except ValueError as val:
         print(val)
-        return Response("Value not found inside json data")
+        return Response("Value not found inside json data", status=400)
     except KeyError:
-        return Response("Key value error: incorrect key passed")
+        return Response("Key value error: incorrect key passed", status=400)
     except Exception as e:
         print(e)
-        result = "Invalid input"
+        return jsonify({"error": "Invalid input"}), 500
 
     return jsonify(result)
 
